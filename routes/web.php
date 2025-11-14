@@ -41,7 +41,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::middleware(['auth', 'role:Administrador,Super Usuario'])->prefix('admin')->name('admin.')->group(function () {
     
     // Dashboard principal para administradores
-    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+    // Alias para compatibilidad con código existente
+    Route::get('/home', [AdminController::class, 'index'])->name('home');
     
     // Ruta de prueba para Super Usuario (más restrictiva)
     Route::middleware(['role:Super Usuario'])->get('/settings', function () {
@@ -49,10 +51,12 @@ Route::middleware(['auth', 'role:Administrador,Super Usuario'])->prefix('admin')
     })->name('super.settings');
 
     // --- Gestión de Usuarios (UserController) ---
-    Route::resource('users', UserController::class)->except(['show']);
-    
-    // Ruta específica de delegación (Solo Super Usuario)
-    Route::middleware(['role:Super Usuario'])->put('users/{user}/delegate', [UserController::class, 'delegateRole'])->name('users.delegate');
+    Route::middleware(['role:Super Usuario'])->group(function () {
+        Route::get('/config/users', [UserController::class, 'index'])->name('users.list');
+        Route::resource('users', UserController::class)->except(['show']);
+        // Ruta específica de delegación (Solo Super Usuario)
+        Route::put('users/{user}/delegate', [UserController::class, 'delegateRole'])->name('users.delegate');
+    });
 
     // --- Gestión de Transacciones (TransactionController) ---
     Route::resource('transactions', TransactionController::class)->only(['index', 'create', 'store']);
@@ -94,10 +98,10 @@ Route::middleware(['auth', 'role:Administrador,Super Usuario'])->prefix('admin')
 
 Route::middleware(['auth', 'role:Residente'])->prefix('resident')->name('resident.')->group(function () {
     
-    // Panel básico para residentes
-    Route::get('/home', function () {
-        return view('resident.home');
-    })->name('home');
+    // Panel básico para residentes (usa ResidentReportController)
+    Route::get('/dashboard', [ResidentReportController::class, 'index'])->name('dashboard');
+    // Alias para compatibilidad con código existente
+    Route::get('/home', [ResidentReportController::class, 'index'])->name('home');
     
     // --- Estado de Cuenta Individual (ResidentReportController) ---
     Route::get('/my-account-status', [ResidentReportController::class, 'showMyAccountStatus'])->name('account_status');

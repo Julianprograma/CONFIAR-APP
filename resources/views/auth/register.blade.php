@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light dark">
 <style>
-/* Reutiliza estilos principales del login para consistencia */
 body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#101726,#1c2f4d 55%,#234d6f);}
 .card{max-width:440px;width:100%;background:rgba(255,255,255,.10);backdrop-filter:blur(18px);border:1px solid rgba(255,255,255,.25);padding:42px;border-radius:22px;color:#fff;}
 h2{margin:0 0 10px;font-size:28px;font-weight:600;}
@@ -32,6 +31,9 @@ a:hover{text-decoration:underline;}
         @if(session('status'))
             <div class="status">{{ session('status') }}</div>
         @endif
+        @if(session('error'))
+            <div class="error">{{ session('error') }}</div>
+        @endif
         @if ($errors->any())
             <div class="error">
                 @foreach($errors->all() as $e)
@@ -43,8 +45,12 @@ a:hover{text-decoration:underline;}
         <form method="POST" action="{{ route('register') }}">
             @csrf
             <div>
-                <label for="name">Nombre completo</label>
-                <input type="text" id="name" name="name" required maxlength="120" value="{{ old('name') }}" placeholder="Tu nombre">
+                <label for="first_name">Nombre</label>
+                <input type="text" id="first_name" name="first_name" required maxlength="100" value="{{ old('first_name') }}" placeholder="Tu nombre">
+            </div>
+            <div>
+                <label for="last_name">Apellido</label>
+                <input type="text" id="last_name" name="last_name" required maxlength="100" value="{{ old('last_name') }}" placeholder="Tu apellido">
             </div>
             <div>
                 <label for="email">Correo</label>

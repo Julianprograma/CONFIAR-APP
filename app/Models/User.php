@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -12,33 +11,57 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    // 1) Columna real del hash
+    protected $passwordColumn = 'password_hash';
+    protected $primaryKey = 'id';
+
+    // 2) Timestamps (sin updated_at)
+    public $timestamps = true;
+    const UPDATED_AT = null;
+
     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
+     * Mass assignable
      */
     protected $fillable = [
-        'name',
+        'role_id',
+        'first_name',
+        'last_name',
         'email',
-        'password',
+        'password_hash',
+        'phone_number',
+        'is_active',
     ];
 
     /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
+     * Hidden
      */
     protected $hidden = [
-        'password',
+        'password_hash',
         'remember_token',
     ];
 
+    // Autenticación: devolver el hash desde password_hash
+    public function getAuthPassword()
+    {
+        return $this->password_hash;
+    }
+
+    // Permitir asignar 'password' y guardarlo en password_hash (el valor ya debe venir hasheado)
+    public function setPasswordAttribute($value)
+    {
+        $this->attributes['password_hash'] = $value;
+    }
+
     /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
+     * Relaciones
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function apartment()
+    {
+        return $this->hasOne(Apartment::class, 'owner_id');
+    }
 }

@@ -1,14 +1,30 @@
+<?php
+
+namespace Database\Seeders;
+
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\Role; 
 
 class RoleSeeder extends Seeder
 {
-    public function run()
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
     {
-        DB::table('roles')->insert([
-            ['id' => 1, 'name' => 'Super Usuario'],
-            ['id' => 2, 'name' => 'Administrador'],
-            ['id' => 3, 'name' => 'Residente'],
-        ]);
+        // Nombres de roles según la lógica definida
+        $roles = [
+            'Super Usuario',
+            'Administrador',
+            'Residente',
+        ];
+
+        foreach ($roles as $roleName) {
+            // Usa updateOrCreate para evitar duplicados si el seeder se ejecuta más de una vez
+            Role::updateOrCreate(
+                ['name' => $roleName],
+                ['name' => $roleName]
+            );
+        }
     }
 }

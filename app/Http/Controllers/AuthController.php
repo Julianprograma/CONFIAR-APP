@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
+use App\Models\Role;
+use App\Models\Apartment;
 
 class AuthController extends Controller
 {
@@ -13,7 +17,6 @@ class AuthController extends Controller
      */
     public function showLoginForm()
     {
-        // En una aplicación Laravel con vistas Blade
         return view('auth.login'); 
     }
 
@@ -34,7 +37,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // 3. Redirigir según el rol del usuario (Lógica de redirección simple)
+            // 3. Redirigir según el rol del usuario
             $user = Auth::user();
             
             if ($user->role->name == 'Super Usuario' || $user->role->name == 'Administrador') {
@@ -63,7 +66,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/'); // Redirigir a la página de inicio o login
+        return redirect('/');
     }
 
     /**
@@ -76,25 +79,39 @@ class AuthController extends Controller
     }
 
     /**
-     * Procesa el registro de un nuevo usuario.
+     * Procesa el registro de un nuevo usuario Residente.
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function register(Request $request)
     {
+        // 1. Validar los datos de la solicitud
         $data = $request->validate([
-            'name' => ['required','string','max:120'],
-            'email' => ['required','email','max:150','unique:users,email'],
+            'first_name' => ['required','string','max:100'],
+            'last_name' => ['required','string','max:100'],
+            'email' => ['required','email','max:100','unique:users,email'],
             'password' => ['required','string','min:8','confirmed'],
+            // 'apartment_number' => ['nullable', 'string', 'max:10'], 
         ]);
 
-        $user = \App\Models\User::create([
-            'name' => $data['name'],
+        // 2. Obtener el ID del rol 'Residente'
+        $residenteRole = Role::where('name', 'Residente')->first();
+
+        if (!$residenteRole) {
+            return back()->with('error', 'Error de configuración: El rol Residente no existe en el sistema. Contacte al administrador.')->withInput();
+        }
+
+        // 3. Crear el usuario
+        $user = User::create([
+            'first_name' => $data['first_name'],
+            'last_name' => $data['last_name'],
             'email' => $data['email'],
-            'password' => bcrypt($data['password']),
-            'role' => 'Residente', // ajusta según tu modelo
+            'password' => Hash::make($data['password']),
+            'role_id' => $residenteRole->id,
+            'is_active' => true,
         ]);
 
+        // 4. Iniciar sesión y redirigir
         auth()->login($user);
         return redirect()->route('resident.home')->with('status','Cuenta creada correctamente.');
     }
