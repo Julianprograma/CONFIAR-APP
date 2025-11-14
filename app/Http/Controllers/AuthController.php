@@ -65,4 +65,37 @@ class AuthController extends Controller
 
         return redirect('/'); // Redirigir a la página de inicio o login
     }
+
+    /**
+     * Muestra el formulario de registro.
+     * @return \Illuminate\View\View
+     */
+    public function showRegisterForm()
+    {
+        return view('auth.register');
+    }
+
+    /**
+     * Procesa el registro de un nuevo usuario.
+     * @param \Illuminate\Http\Request $request
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function register(Request $request)
+    {
+        $data = $request->validate([
+            'name' => ['required','string','max:120'],
+            'email' => ['required','email','max:150','unique:users,email'],
+            'password' => ['required','string','min:8','confirmed'],
+        ]);
+
+        $user = \App\Models\User::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => bcrypt($data['password']),
+            'role' => 'Residente', // ajusta según tu modelo
+        ]);
+
+        auth()->login($user);
+        return redirect()->route('resident.home')->with('status','Cuenta creada correctamente.');
+    }
 }

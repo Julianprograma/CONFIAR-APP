@@ -1,22 +1,19 @@
+// app/Models/Apartment.php
 <?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+// ...
 
 class Apartment extends Model
 {
-    use HasFactory;
-
-    protected $fillable = [
-        // Add common fields for apartments as needed
-        'code',
-        'owner_id',
-    ];
-
-    public function dues()
+    // ...
+    
+    public function owner()
     {
-        return $this->hasMany(MonthlyDue::class);
+        // La clave foránea es 'owner_id' en la tabla 'apartments'
+        return $this->belongsTo(User::class, 'owner_id'); 
+    }
+    
+    public function monthlyDues()
+    {
+        return $this->hasMany(MonthlyDue::class, 'apartment_id');
     }
 }
