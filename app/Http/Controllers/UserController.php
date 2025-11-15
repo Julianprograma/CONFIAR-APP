@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Role;
 use App\Models\Apartment;
@@ -76,6 +77,40 @@ class UserController extends Controller
         $user->update(['role_id' => $request->role_id]);
         
         return back()->with('success', "Rol de {$user->name} actualizado a {$user->role->name}.");
+    }
+
+    //Actualización de roles
+
+    public function updateRole(Request $request, User $user)
+    {
+        // 1. Autorización: Solo el Super Usuario puede ejecutar esta acción.
+        // Usamos la constante si la definiste, o el ID 1.
+        if (Auth::user()->role_id !== Role::SUPER_USUARIO) {
+            return back()->with('error', 'Acceso denegado. Solo un Super Usuario tiene este privilegio.');
+        }
+
+        // 2. Validación de la Solicitud
+        $request->validate([
+            // Asegura que el nuevo role_id sea 2 (Administrador) o 3 (Residente)
+            'role_id' => 'required|integer|in:' . Role::ADMINISTRADOR . ',' . Role::RESIDENTE,
+        ]);
+        
+        $newRoleId = $request->role_id;
+        
+        // 3. Restricción adicional (Opcional, pero recomendado):
+        // Bloquear intentos de cambiar el rol del Super Usuario
+        if ($user->role_id === Role::SUPER_USUARIO && $newRoleId !== Role::SUPER_USUARIO) {
+            return back()->with('error', 'No puedes cambiar el rol del Super Usuario.');
+        }
+        
+        // 4. Ejecutar la Actualización
+        $user->role_id = $newRoleId;
+        $user->save();
+
+        // 5. Preparar mensaje de respuesta
+        $roleName = Role::find($newRoleId)->name ?? 'Rol Desconocido';
+        
+        return back()->with('status', "El rol de {$user->first_name} ha sido actualizado a {$roleName}.");
     }
 
     // Nota: Aquí irían los métodos update() y destroy().

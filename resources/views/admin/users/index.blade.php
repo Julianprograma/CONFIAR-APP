@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -74,6 +73,10 @@
             color: #fff;
         }
         .btn-sm { padding: 6px 12px; font-size: 12px; }
+        /* agregado */
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-success:hover { filter: brightness(0.95); }
+        .text-muted { color: var(--text-muted); }
         h1 { font-size: 32px; margin-bottom: 30px; }
         .card {
             background: var(--card-bg);
@@ -175,6 +178,13 @@
             <div class="alert alert-error">{{ session('error') }}</div>
         @endif
 
+        {{-- Constantes de rol para la vista --}}
+        @php
+            $superUsuarioId = 1;
+            $administradorId = 2;
+            // $residenteId = 3; // opcional si lo quieres usar en vez del literal
+        @endphp
+
         <h1>Gestión de Usuarios</h1>
 
         <div class="card">
@@ -204,6 +214,8 @@
                         <th>Nombre Completo</th>
                         <th>Email</th>
                         <th>Rol</th>
+                        <!-- nueva columna -->
+                        <th>Gestión de Rol</th>
                         <th>Estado</th>
                         <th>Registro</th>
                         <th>Acciones</th>
@@ -228,6 +240,32 @@
                                     </select>
                                 </form>
                             </td>
+
+                            <!-- celda nueva: botones ascender/degradar -->
+                            <td>
+                                @if (Auth::user()->role_id === $superUsuarioId)
+                                    @if ($user->role_id === 3)
+                                        <form action="{{ route('admin.users.update-role', $user) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="role_id" value="2">
+                                            <button type="submit" class="btn btn-success btn-sm">Ascender a Admin</button>
+                                        </form>
+                                    @endif
+
+                                    @if ($user->role_id === $administradorId)
+                                        <form action="{{ route('admin.users.update-role', $user) }}" method="POST" style="display:inline;">
+                                            @csrf
+                                            @method('PUT')
+                                            <input type="hidden" name="role_id" value="3">
+                                            <button type="submit" class="btn btn-danger btn-sm">Degradar a Residente</button>
+                                        </form>
+                                    @endif
+                                @else
+                                    <span class="text-muted">Sin permisos</span>
+                                @endif
+                            </td>
+
                             <td>
                                 <span class="badge {{ $user->is_active ? 'badge-success' : 'badge-danger' }}">
                                     {{ $user->is_active ? 'Activo' : 'Inactivo' }}

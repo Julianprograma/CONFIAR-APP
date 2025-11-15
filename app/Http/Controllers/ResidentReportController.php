@@ -45,7 +45,18 @@ class ResidentReportController extends Controller
 
         return view('resident.account_status', $reportData);
     }
+    public function index()
+    {
+        $user = Auth::user();
 
+        $apartment = $user->apartment; 
+        
+        return view('admin.DashboardResidente', [
+            'user' => $user,
+            'apartment' => $apartment, // <--- ESTO PASA LA VARIABLE A LA VISTA
+            'userName' => $user->first_name . ' ' . $user->last_name,
+        ]);
+    }
     /**
      * [ADMIN/SUPER USER] Muestra el estado de cuenta para un apartamento específico.
      */

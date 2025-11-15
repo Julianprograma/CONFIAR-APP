@@ -11,6 +11,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $with = ['role'];
     // 1) Columna real del hash (opcional pero claro para MySQL)
     protected $passwordColumn = 'password_hash';
     protected $primaryKey = 'id';

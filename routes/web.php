@@ -40,7 +40,7 @@ Route::post('/register', [AuthController::class, 'register']);
 */
 Route::middleware(['auth', 'role:Administrador,Super Usuario'])
     ->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/users', [UserController::class, 'index'])->name('users.list');
         Route::put('/users/{user}/role', [UserController::class, 'updateRole'])->name('users.update-role');
         Route::put('/users/{user}/toggle', [UserController::class, 'toggleStatus'])->name('users.toggle-status');

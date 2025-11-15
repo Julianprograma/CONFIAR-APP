@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -72,22 +71,58 @@
             background: var(--primary);
             color: #fff;
         }
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid var(--border);
+        }
+        .alert-danger { background: rgba(239, 68, 68, .1); color: var(--danger); }
     </style>
 </head>
 <body>
     <div class="container">
+        @php
+            $safeUserName = $userName ?? 'Residente';
+            $apNumber = optional($apartment)->number ?? optional($apartment)->apartment_number;
+            $apSqm = optional($apartment)->square_meters;
+            $safeSummary = [
+                'total_pending' => isset($summary['total_pending']) ? $summary['total_pending'] : 0,
+                'total_paid' => isset($summary['total_paid']) ? $summary['total_paid'] : 0,
+            ];
+            $duesList = isset($dues) ? $dues : collect();
+        @endphp
+
         <a href="{{ route('resident.home') }}" class="btn" style="margin-bottom:20px;">← Volver</a>
-        
-        <h1>Estado de Cuenta - Apartamento {{ $apartment->number }}</h1>
+
+        <h1>Bienvenido, {{ $safeUserName }}</h1>
+
+        @if (!empty($apNumber))
+            <div class="card" style="margin:16px 0;">
+                <h2>Detalles de su Apartamento</h2>
+                <p>Número: <strong>{{ $apNumber }}</strong></p>
+                <p>M²: <strong>{{ $apSqm ?? '-' }}</strong></p>
+            </div>
+        @else
+            <div class="alert alert-danger">
+                Aviso: Su cuenta aún no está asociada a ningún apartamento. Contacte a la administración.
+            </div>
+        @endif
+
+        <p style="margin: 8px 0 20px;">
+            Apartamento asignado: {{ $apNumber ?? 'No asignado' }}
+        </p>
+
+        <h1>Estado de Cuenta - Apartamento {{ $apNumber ?? 'No asignado' }}</h1>
 
         <div class="summary">
             <div class="summary-card">
                 <div class="summary-label">SALDO PENDIENTE</div>
-                <div class="summary-value danger">${{ number_format($summary['total_pending'], 0, ',', '.') }}</div>
+                <div class="summary-value danger">${{ number_format($safeSummary['total_pending'], 0, ',', '.') }}</div>
             </div>
             <div class="summary-card">
                 <div class="summary-label">TOTAL PAGADO</div>
-                <div class="summary-value success">${{ number_format($summary['total_paid'], 0, ',', '.') }}</div>
+                <div class="summary-value success">${{ number_format($safeSummary['total_paid'], 0, ',', '.') }}</div>
             </div>
         </div>
 
@@ -105,25 +140,29 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($dues as $due)
+                    @forelse($duesList as $due)
                     <tr>
-                        <td>{{ \Carbon\Carbon::parse($due->period)->format('m/Y') }}</td>
+                        <td>{{ !empty($due->period) ? \Carbon\Carbon::parse($due->period)->format('m/Y') : '-' }}</td>
                         <td>{{ $due->concept ?? 'Cuota mensual' }}</td>
-                        <td>${{ number_format($due->amount, 0, ',', '.') }}</td>
-                        <td>{{ \Carbon\Carbon::parse($due->due_date)->format('d/m/Y') }}</td>
+                        <td>${{ number_format($due->amount ?? 0, 0, ',', '.') }}</td>
+                        <td>{{ !empty($due->due_date) ? \Carbon\Carbon::parse($due->due_date)->format('d/m/Y') : '-' }}</td>
                         <td>
-                            <span class="badge {{ $due->status == 'Pagada' ? 'badge-success' : ($due->status == 'Vencida' ? 'badge-danger' : 'badge-warning') }}">
-                                {{ $due->status }}
+                            @php($status = $due->status ?? 'Pendiente')
+                            <span class="badge {{ $status == 'Pagada' ? 'badge-success' : ($status == 'Vencida' ? 'badge-danger' : 'badge-warning') }}">
+                                {{ $status }}
                             </span>
                         </td>
-                        <td>{{ $due->payment_date ? \Carbon\Carbon::parse($due->payment_date)->format('d/m/Y') : '-' }}</td>
+                        <td>{{ !empty($due->payment_date) ? \Carbon\Carbon::parse($due->payment_date)->format('d/m/Y') : '-' }}</td>
                     </tr>
                     @empty
                     <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:40px;">Sin cuotas registradas</td></tr>
                     @endforelse
                 </tbody>
             </table>
-            <div style="margin-top:20px;">{{ $dues->links() }}</div>
+
+            @if (isset($dues) && method_exists($dues, 'links'))
+                <div style="margin-top:20px;">{{ $dues->links() }}</div>
+            @endif
         </div>
     </div>
 </body>

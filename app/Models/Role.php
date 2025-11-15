@@ -11,10 +11,9 @@ class Role extends Model
 
     // La tabla por defecto es 'roles'
     protected $fillable = ['name'];
-
-    /**
-     * Define la relación de uno a muchos con los usuarios (users.role_id).
-     */
+    public const SUPER_USUARIO = 1;
+    public const ADMINISTRADOR = 2;
+    public const RESIDENTE = 3;
     public function users()
     {
         return $this->hasMany(User::class);
