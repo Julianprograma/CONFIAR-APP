@@ -10,9 +10,11 @@ class Apartment extends Model
     use HasFactory;
 
     protected $fillable = [
-        'apartment_number',
         'owner_id',
-        'square_meters',
+        'number',
+        'tower',
+        'area',
+        'coefficient'
     ];
 
     /**
@@ -22,13 +24,5 @@ class Apartment extends Model
     {
         // La clave foránea es 'owner_id' en la tabla apartments
         return $this->belongsTo(User::class, 'owner_id');
-    }
-
-    /**
-     * Relación: Un apartamento tiene muchas cuotas mensuales (MonthlyDues).
-     */
-    public function monthlyDues()
-    {
-        return $this->hasMany(MonthlyDue::class, 'apartment_id');
     }
 }

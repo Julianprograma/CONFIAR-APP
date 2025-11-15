@@ -17,7 +17,7 @@ class AuthController extends Controller
      */
     public function showLoginForm()
     {
-        return view('auth.login'); 
+        return view('auth.login');
     }
 
     /**
@@ -27,30 +27,34 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        // 1. Validar los datos de la solicitud
+        // Validar email y password
         $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
+            'email' => ['required','email'],
+            'password' => ['required'],
         ]);
 
-        // 2. Intentar autenticar al usuario
+        // Auth::attempt usa getAuthPassword() => password_hash
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
-            // 3. Redirigir según el rol del usuario
             $user = Auth::user();
             
-            if ($user->role->name == 'Super Usuario' || $user->role->name == 'Administrador') {
+            // CORRECCIÓN: Validar por role_id (1=Super Usuario, 2=Admin, 3=Residente)
+            if (in_array($user->role_id, [1, 2])) {
                 return redirect()->intended(route('admin.dashboard'));
             }
             
-            // Redirección por defecto para Residentes
-            return redirect()->intended(route('resident.home')); 
+            // Residente (role_id = 3)
+            if ($user->role_id == 3) {
+                return redirect()->intended(route('resident.home'));
+            }
+
+            // Fallback por si el role_id no coincide
+            return redirect('/')->with('error', 'Rol no reconocido. Contacta al administrador.');
         }
 
-        // 4. Fallo de autenticación
         return back()->withErrors([
-            'email' => 'Las credenciales proporcionadas no coinciden con nuestros registros.',
+            'email' => 'Credenciales inválidas.',
         ])->onlyInput('email');
     }
 
@@ -62,10 +66,8 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
-
         $request->session()->invalidate();
         $request->session()->regenerateToken();
-
         return redirect('/');
     }
 
@@ -85,33 +87,37 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        // 1. Validar los datos de la solicitud
         $data = $request->validate([
             'first_name' => ['required','string','max:100'],
-            'last_name' => ['required','string','max:100'],
-            'email' => ['required','email','max:100','unique:users,email'],
-            'password' => ['required','string','min:8','confirmed'],
-            // 'apartment_number' => ['nullable', 'string', 'max:10'], 
+            'last_name'  => ['required','string','max:100'],
+            'email'      => ['required','email','max:100','unique:users,email'],
+            'password'   => ['required','string','min:8','confirmed'],
         ]);
 
-        // 2. Obtener el ID del rol 'Residente'
+        // CORRECCIÓN: Buscar por nombre O crear con role_id = 3 directamente
         $residenteRole = Role::where('name', 'Residente')->first();
-
+        
         if (!$residenteRole) {
-            return back()->with('error', 'Error de configuración: El rol Residente no existe en el sistema. Contacte al administrador.')->withInput();
+            // Si no existe el rol por nombre, asignar directamente role_id = 3
+            $user = User::create([
+                'first_name'    => $data['first_name'],
+                'last_name'     => $data['last_name'],
+                'email'         => $data['email'],
+                'password_hash' => Hash::make($data['password']),
+                'role_id'       => 3, // Residente
+                'is_active'     => true,
+            ]);
+        } else {
+            $user = User::create([
+                'first_name'    => $data['first_name'],
+                'last_name'     => $data['last_name'],
+                'email'         => $data['email'],
+                'password_hash' => Hash::make($data['password']),
+                'role_id'       => $residenteRole->id,
+                'is_active'     => true,
+            ]);
         }
 
-        // 3. Crear el usuario
-        $user = User::create([
-            'first_name' => $data['first_name'],
-            'last_name' => $data['last_name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'role_id' => $residenteRole->id,
-            'is_active' => true,
-        ]);
-
-        // 4. Iniciar sesión y redirigir
         auth()->login($user);
         return redirect()->route('resident.home')->with('status','Cuenta creada correctamente.');
     }

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\Role; 
+use Illuminate\Support\Facades\DB;
 
 class RoleSeeder extends Seeder
 {
@@ -12,19 +12,8 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-        // Nombres de roles según la lógica definida
-        $roles = [
-            'Super Usuario',
-            'Administrador',
-            'Residente',
-        ];
-
-        foreach ($roles as $roleName) {
-            // Usa updateOrCreate para evitar duplicados si el seeder se ejecuta más de una vez
-            Role::updateOrCreate(
-                ['name' => $roleName],
-                ['name' => $roleName]
-            );
-        }
+        DB::table('roles')->updateOrInsert(['id' => 1], ['name' => 'Super Usuario']);
+        DB::table('roles')->updateOrInsert(['id' => 2], ['name' => 'Administrador']);
+        DB::table('roles')->updateOrInsert(['id' => 3], ['name' => 'Residente']);
     }
 }
