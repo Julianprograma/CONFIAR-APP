@@ -12,57 +12,54 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable;
 
     protected $with = ['role'];
-    // 1) Columna real del hash (opcional pero claro para MySQL)
-    protected $passwordColumn = 'password_hash';
     protected $primaryKey = 'id';
 
-    // 2) Timestamps (sin updated_at si no existe en tu BD)
     public $timestamps = true;
-    const UPDATED_AT = null;
 
     /**
      * Mass assignable
-     * Incluye password_hash para permitir asignación masiva en User::create()
      */
     protected $fillable = [
         'role_id',
-        'first_name',
-        'last_name',
+        'name',
         'email',
-        'password', // <--- CAMBIAR 'password_hash' a 'password' o añadir 'password'
-        'password_hash', // <--- MANTENER ESTO SI QUIERES, PERO AÑADIR 'password'
+        'password',
         'phone_number',
         'is_active',
     ];
 
     /**
      * Hidden
-     * Oculta password_hash en JSON para seguridad
      */
     protected $hidden = [
-        'password_hash', // CORRECTO: No exponer el hash en respuestas API
+        'password',
         'remember_token',
     ];
 
     /**
-     * Autenticación: devolver el hash desde password_hash
-     * CLAVE para que Auth::attempt funcione con tu columna personalizada
+     * Return the password for authentication. Support legacy 'password_hash' as fallback.
      */
     public function getAuthPassword()
     {
-        return $this->password_hash;
+        return $this->password ?? $this->password_hash ?? '';
     }
 
     /**
-     * Permitir asignar 'password' y guardarlo en password_hash
-     * NOTA: El valor debe venir ya hasheado (Hash::make) desde el controlador
-     * Ejemplo: $user->password = Hash::make('secret'); guardará en password_hash
+     * If assigning password in plaintext, hash it automatically.
      */
     public function setPasswordAttribute($value)
     {
-        // Asumiendo que $value ya viene hasheado si se usa directamente
-        // En AuthController usas User::create con 'password_hash' => Hash::make($data['password'])
-        $this->attributes['password_hash'] = $value; 
+        if (empty($value)) {
+            return;
+        }
+
+        // If value already looks like a bcrypt hash, keep it
+        if (is_string($value) && str_starts_with($value, '$2y$')) {
+            $this->attributes['password'] = $value;
+            return;
+        }
+
+        $this->attributes['password'] = \Illuminate\Support\Facades\Hash::make($value);
     }
 
     /**

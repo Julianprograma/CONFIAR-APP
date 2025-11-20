@@ -214,8 +214,6 @@
                         <th>Nombre Completo</th>
                         <th>Email</th>
                         <th>Rol</th>
-                        <!-- nueva columna -->
-                        <th>Gestión de Rol</th>
                         <th>Estado</th>
                         <th>Registro</th>
                         <th>Acciones</th>
@@ -228,6 +226,7 @@
                             <td>{{ $user->first_name }} {{ $user->last_name }}</td>
                             <td>{{ $user->email }}</td>
                             <td>
+                                @if (Auth::user()->role_id === $superUsuarioId)
                                 <form method="POST" action="{{ route('admin.users.update-role', $user) }}" style="display:inline;">
                                     @csrf
                                     @method('PUT')
@@ -239,33 +238,10 @@
                                         @endforeach
                                     </select>
                                 </form>
-                            </td>
-
-                            <!-- celda nueva: botones ascender/degradar -->
-                            <td>
-                                @if (Auth::user()->role_id === $superUsuarioId)
-                                    @if ($user->role_id === 3)
-                                        <form action="{{ route('admin.users.update-role', $user) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('PUT')
-                                            <input type="hidden" name="role_id" value="2">
-                                            <button type="submit" class="btn btn-success btn-sm">Ascender a Admin</button>
-                                        </form>
-                                    @endif
-
-                                    @if ($user->role_id === $administradorId)
-                                        <form action="{{ route('admin.users.update-role', $user) }}" method="POST" style="display:inline;">
-                                            @csrf
-                                            @method('PUT')
-                                            <input type="hidden" name="role_id" value="3">
-                                            <button type="submit" class="btn btn-danger btn-sm">Degradar a Residente</button>
-                                        </form>
-                                    @endif
                                 @else
-                                    <span class="text-muted">Sin permisos</span>
+                                    {{ $user->role->name }}
                                 @endif
                             </td>
-
                             <td>
                                 <span class="badge {{ $user->is_active ? 'badge-success' : 'badge-danger' }}">
                                     {{ $user->is_active ? 'Activo' : 'Inactivo' }}

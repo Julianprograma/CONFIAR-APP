@@ -19,7 +19,8 @@ class UserController extends Controller
     {
         // Excluye al Super Usuario (role_id = 1) de la lista general
         $users = User::with('role', 'apartment')->where('role_id', '!=', 1)->paginate(15);
-        return view('admin.users.index', compact('users'));
+        $roles = Role::where('name', '!=', 'Super Usuario')->get();
+        return view('admin.users.index', compact('users', 'roles'));
     }
 
     /**

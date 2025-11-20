@@ -7,6 +7,7 @@
     <style>
         :root {
             --primary: #2d81ff;
+            --primary-dark: #1662d3;
             --bg: #0f172a;
             --card-bg: #1e293b;
             --border: #334155;
@@ -23,6 +24,29 @@
             line-height: 1.6;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 20px 0;
+            margin-bottom: 30px;
+        }
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo { font-size: 24px; font-weight: 700; color: var(--primary); }
+        nav { display: flex; gap: 25px; align-items: center; }
+        nav a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            transition: .2s;
+        }
+        nav a:hover { color: var(--primary); }
         h1 { font-size: 28px; margin-bottom: 20px; }
         .summary {
             display: grid;
@@ -71,6 +95,10 @@
             background: var(--primary);
             color: #fff;
         }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
         .alert {
             padding: 12px 16px;
             border-radius: 8px;
@@ -81,6 +109,19 @@
     </style>
 </head>
 <body>
+    <header>
+        <div class="header-content">
+            <div class="logo">Confiar App</div>
+            <nav>
+                <a href="{{ route('resident.home') }}">Dashboard</a>
+                <span style="color: var(--text-muted);">{{ auth()->user()->first_name }}</span>
+                <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-danger">Salir</button>
+                </form>
+            </nav>
+        </div>
+    </header>
     <div class="container">
         @php
             $safeUserName = $userName ?? 'Residente';
